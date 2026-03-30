@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redz Decompiler | Luau Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-card">
+        <header>
+            <div class="logo-area">
+                <i class="fa-solid fa-microchip"></i>
+                <h1>Redz Decompiler</h1>
+            </div>
+            <p>Advanced Luau Bytecode Reconstructor</p>
+        </header>
+
+        <div class="input-container">
+            <div class="toolbar">
+                <button onclick="document.getElementById('fileInput').click()">
+                    <i class="fa-solid fa-upload"></i> Upload .lua / .txt
+                </button>
+                <input type="file" id="fileInput" accept=".txt,.lua" hidden>
+            </div>
+            <textarea id="inputCode" placeholder="-- Paste Bytecode or Obfuscated Script here..."></textarea>
+        </div>
+        
+        <button id="decompileBtn" class="primary-action">
+            <i class="fa-solid fa-gear"></i> START DECOMPILATION
+        </button>
+
+        <div id="resultArea" class="hidden-section">
+            <div class="output-header">
+                <span><i class="fa-solid fa-code"></i> output.lua</span>
+                <div class="actions">
+                    <button id="copyBtn"><i class="fa-solid fa-copy"></i> Copy</button>
+                    <button id="downloadBtn" class="download"><i class="fa-solid fa-download"></i> Save</button>
+                </div>
+            </div>
+            <div class="code-wrapper">
+                <pre id="outputCode"></pre>
+            </div>
+        </div>
+    </div>
+
+    <a href="https://www.youtube.com/@theball2000" target="_blank" class="yt-link">
+        <i class="fa-brands fa-youtube"></i>
+        <span>Subscribe to theball2000</span>
+    </a>
+
+    <script src="script.js"></script>
+</body>
+</html>
