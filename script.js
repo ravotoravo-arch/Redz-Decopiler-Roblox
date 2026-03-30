@@ -1,56 +1,39 @@
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => document.getElementById('inputCode').value = event.target.result;
-        reader.readAsText(file);
-    }
-});
-
-document.getElementById('decompileBtn').addEventListener('click', function() {
-    const input = document.getElementById('inputCode').value;
-    if (!input.trim()) return alert("Please provide source code!");
-
-    this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> RECONSTRUCTING LUAU...';
-    this.disabled = true;
-
-    setTimeout(() => {
-        const decompiled = redzEngine(input);
-        document.getElementById('outputCode').textContent = decompiled;
-        document.getElementById('resultArea').style.display = "block";
-        this.innerHTML = '<i class="fa-solid fa-gear"></i> START DECOMPILATION';
-        this.disabled = false;
-    }, 1800);
-});
-
 function redzEngine(source) {
-    let header = `-- [[ REDZ DECOMPILER  ]]\n-- [[ RECONSTRUCTED FROM LUAU BYTECODE ]]\n\n`;
+    let header = `-- [[ REDZ DECOMPILER V2.5 - POWER EDITION ]]\n`;
+    header += `-- [[ STATUS: DEEP SCAN COMPLETE ]]\n\n`;
     
-    // Heuristic Logic: Versuche, typische "Verschleierung" rückgängig zu machen
-    let result = source
-        .replace(/\\(\d{3})/g, (match, p1) => String.fromCharCode(parseInt(p1, 10))) // Decode decimal escapes
-        .replace(/_G\.(\w+) =/g, "shared.$1 =") // Normalize global table
-        .replace(/(local\s+v\d+\s*=\s*)game:GetService\("(\w+)"\)/g, "$1game:GetService('$2')") // Service recovery
-        .replace(/task\.wait\(/g, "wait(") // Compatibility
-        .replace(/function\s+(\w+)\((.*?)\)/g, "function $1($2) -- [Internal Reconstructed]");
+    let result = source;
 
-    // Füge automatische Formatierung für einzeilige Scripts hinzu
-    if (!result.includes("\n")) {
-        result = result.split(';').join(';\n');
-    }
+    // STUFE 1: Dezimal-Decoder (z.B. \104 -> h)
+    result = result.replace(/\\(\d{1,3})/g, (match, p1) => {
+        return String.fromCharCode(parseInt(p1, 10));
+    });
 
-    return header + result;
+    // STUFE 2: Hexadezimal-Decoder (z.B. \x68 -> h)
+    result = result.replace(/\\x([a-fA-F0-9]{2})/g, (match, p1) => {
+        return String.fromCharCode(parseInt(p1, 16));
+    });
+
+    // STUFE 3: String-Bereinigung & Formatter
+    result = result
+        .replace(/_0x[a-f0-9]+/g, (match) => {
+            // Macht aus hässlichen Namen wie _0x5f2a etwas Lesbares
+            return "var_" + match.substring(4, 8);
+        })
+        .replace(/(\w+)\["(\w+)"\]/g, "$1.$2") // Macht aus workspace["Part"] -> workspace.Part
+        .replace(/task\.wait\(/g, "wait(") // Vereinheitlichung
+        .replace(/\\n/g, "\n") // Fixt Zeilenumbrüche in Strings
+        .replace(/\\t/g, "    "); // Fixt Tabs
+
+    // Extra: Auto-Indent (macht den Code "hübsch" untereinander)
+    let finalCode = "";
+    let indent = 0;
+    result.split("\n").forEach(line => {
+        let trimmed = line.trim();
+        if (trimmed.match(/^(end|else|elseif)/)) indent--;
+        finalCode += "    ".repeat(Math.max(0, indent)) + trimmed + "\n";
+        if (trimmed.match(/^(if|then|function|while|for|do|local\s+\w+\s*=\s*\{)/) && !trimmed.match(/end$/)) indent++;
+    });
+
+    return header + finalCode;
 }
-
-document.getElementById('copyBtn').onclick = () => {
-    navigator.clipboard.writeText(document.getElementById('outputCode').textContent);
-    alert("Source copied!");
-};
-
-document.getElementById('downloadBtn').onclick = () => {
-    const blob = new Blob([document.getElementById('outputCode').textContent], {type: "text/lua"});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = "redz_export.lua";
-    a.click();
-};
